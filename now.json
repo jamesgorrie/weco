@@ -2,7 +2,6 @@
   "version": 2,
   "builds": [{ "src": "next.config.js", "use": "@now/next" }],
   "alias": [
-    "weco_works",
     "weco.works"
   ]
 }
