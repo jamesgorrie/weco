@@ -62,7 +62,7 @@ const Index = ({
   const [hasVisualRepresentation, setHasVisualRepresentation] = useState(
     initialHasVisualRepresentation
   )
-  const debouncedQuery = useDebounce(query, 500)
+  const debouncedQuery = useDebounce(query, 250)
 
   const firstRender = useRef(true)
   useEffect(() => {
