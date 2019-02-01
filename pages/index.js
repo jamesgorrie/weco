@@ -1,5 +1,5 @@
 import fetch from 'isomorphic-unfetch'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Router from 'next/router'
 import Link from 'next/link'
 import styled, { createGlobalStyle } from 'styled-components'
@@ -64,11 +64,16 @@ const Index = ({
   )
   const debouncedQuery = useDebounce(query, 500)
 
+  const firstRender = useRef(true)
   useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false
+      return
+    }
+
     const link = {
       pathname: '/',
       query: removeEmptyValuesFromObject({
-        id,
         query,
         hasVisualRepresentation
       })
