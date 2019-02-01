@@ -32,6 +32,10 @@ const SearchTextInput = styled.input`
   font-family: 'VT323', monospace;
 `
 
+const UiText = styled.span`
+  color: hotpink;
+`
+
 // Empty is anything that doesn't pass JS's `is`
 function removeEmptyValuesFromObject(obj) {
   return Object.keys(obj).reduce((newObj, key) => {
@@ -114,7 +118,9 @@ const Index = ({
       {resultsList && resultsList.results.length > 0 && (
         <ul>
           {resultsList.results.map(result => (
-            <li key={result.id}>{result.title}</li>
+            <li key={result.id}>
+              <UiText>{result.workType.label} /</UiText> {result.title}
+            </li>
           ))}
         </ul>
       )}
