@@ -1,8 +1,10 @@
 import fetch from 'isomorphic-unfetch'
 import { useState, useEffect } from 'react'
 import Router from 'next/router'
+import Link from 'next/link'
 import styled, { createGlobalStyle } from 'styled-components'
 import useDebounce from '../hooks/useDebounce'
+import Result from '../components/Result'
 
 const GlobalStyle = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css?family=VT323');
@@ -51,6 +53,7 @@ function removeEmptyValuesFromObject(obj) {
 }
 
 const Index = ({
+  id,
   resultsList,
   initialQuery,
   initialHasVisualRepresentation
@@ -65,6 +68,7 @@ const Index = ({
     const link = {
       pathname: '/',
       query: removeEmptyValuesFromObject({
+        id,
         query,
         hasVisualRepresentation
       })
@@ -115,21 +119,42 @@ const Index = ({
         </Flex>
       </form>
 
-      {resultsList && resultsList.results.length > 0 && (
-        <ul>
-          {resultsList.results.map(result => (
-            <li key={result.id}>
-              <UiText>{result.workType.label} /</UiText> {result.title}
-            </li>
-          ))}
-        </ul>
+      {!id && resultsList && resultsList.results.length > 0 && (
+        <div>
+          {resultsList.results.length > 0 && (
+            <ul>
+              {resultsList.results.map(result => (
+                <li key={result.id}>
+                  <Link
+                    href={{
+                      pathname: '/',
+                      query: removeEmptyValuesFromObject({
+                        id: result.id,
+                        query,
+                        hasVisualRepresentation
+                      })
+                    }}
+                    onClick={event => console.info(event)}
+                  >
+                    <a>
+                      <UiText>{result.workType.label} /</UiText> {result.title}
+                    </a>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      {id && (
+        <Result result={resultsList.results.find(result => result.id === id)} />
       )}
     </div>
   )
 }
 
 Index.getInitialProps = async ctx => {
-  const { query, hasVisualRepresentation } = ctx.query
+  const { query, hasVisualRepresentation, id } = ctx.query
   const itemsLocationsLocationType = hasVisualRepresentation
     ? ['iiif-image', 'iiif-presentation']
     : null
@@ -148,6 +173,7 @@ Index.getInitialProps = async ctx => {
   const resultsList = query ? await fetch(url).then(resp => resp.json()) : null
 
   return {
+    id,
     resultsList,
     initialQuery: query,
     initialHasVisualRepresentation: Boolean(hasVisualRepresentation)
