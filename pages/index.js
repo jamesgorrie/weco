@@ -132,6 +132,7 @@ const Index = ({
         {!isQueryBuilder && (
           <SearchTextInput
             type="text"
+            placeholder="🔎"
             name="query"
             value={query}
             onChange={event => setQuery(event.currentTarget.value)}
@@ -141,7 +142,7 @@ const Index = ({
           <Fragment>
             <SearchTextInput
               type="text"
-              placeholder="↵ to 🔎"
+              placeholder="🔎"
               name="tokens"
               value={currentToken}
               onChange={event => {
@@ -155,7 +156,6 @@ const Index = ({
                     const tokens = searchTokens.add(currentToken)
                     setSearchTokens(tokens)
                     setCurrentToken('')
-                  } else {
                     const q = [...searchTokens]
                       .map(token => {
                         return `"${token.replace(/"/g, '')}"`
@@ -177,6 +177,13 @@ const Index = ({
                         onClick={event => {
                           searchTokens.delete(token)
                           setSearchTokens(searchTokens)
+                          const q = [...searchTokens]
+                            .map(token => {
+                              return `"${token.replace(/"/g, '')}"`
+                            })
+                            .join('+')
+
+                          setQuery(q)
                         }}
                       >
                         🔨
