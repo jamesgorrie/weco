@@ -75,12 +75,17 @@ function removeEmptyValuesFromObject(obj) {
 const Index = ({
   id,
   resultsList,
-  initialQuery,
+  initialQuery = '',
   initialHasVisualRepresentation
 }) => {
   const [isQueryBuilder, setIsQueryBuilder] = useState(true)
   const [searchTokens, setSearchTokens] = useState(
-    new Set(initialQuery.split('+').map(token => token.replace(/"/g, '')))
+    new Set(
+      initialQuery
+        .split('+')
+        .filter(token => token !== '')
+        .map(token => token.replace(/"/g, ''))
+    )
   )
   const [currentToken, setCurrentToken] = useState('')
   const [query, setQuery] = useState(initialQuery)
