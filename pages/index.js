@@ -1,5 +1,5 @@
 import fetch from 'isomorphic-unfetch'
-import { useState, useEffect, useRef } from 'react'
+import { Fragment, useState, useEffect, useRef } from 'react'
 import Router from 'next/router'
 import Link from 'next/link'
 import styled, { createGlobalStyle } from 'styled-components'
@@ -38,6 +38,26 @@ const UiText = styled.span`
   color: hotpink;
 `
 
+const Token = styled.div`
+  border-border-bottom-right-radius: 2px;
+  border-border-top-right-radius: 2px;
+  background: hotpink;
+  padding: 2px 5px;
+  margin-right: 1px;
+  color: white;
+`
+
+const IconButton = styled.button`
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  margin-left: 15px;
+  padding-left: 5px;
+  font-size: 16px;
+  cursor: pointer;
+`
+
 // Empty is anything that doesn't pass JS's `is`
 function removeEmptyValuesFromObject(obj) {
   return Object.keys(obj).reduce((newObj, key) => {
@@ -58,6 +78,11 @@ const Index = ({
   initialQuery,
   initialHasVisualRepresentation
 }) => {
+  const [isQueryBuilder, setIsQueryBuilder] = useState(true)
+  const [searchTokens, setSearchTokens] = useState(
+    new Set(initialQuery.split('+').map(token => token.replace(/"/g, '')))
+  )
+  const [currentToken, setCurrentToken] = useState('')
   const [query, setQuery] = useState(initialQuery)
   const [hasVisualRepresentation, setHasVisualRepresentation] = useState(
     initialHasVisualRepresentation
@@ -99,12 +124,65 @@ const Index = ({
           Router.push(link, link)
         }}
       >
-        <SearchTextInput
-          type="text"
-          name="query"
-          value={query}
-          onChange={event => setQuery(event.currentTarget.value)}
-        />
+        {!isQueryBuilder && (
+          <SearchTextInput
+            type="text"
+            name="query"
+            value={query}
+            onChange={event => setQuery(event.currentTarget.value)}
+          />
+        )}
+        {isQueryBuilder && (
+          <Fragment>
+            <SearchTextInput
+              type="text"
+              placeholder="↵ to 🔎"
+              name="tokens"
+              value={currentToken}
+              onChange={event => {
+                const val = event.currentTarget.value
+                setCurrentToken(val)
+              }}
+              onKeyDown={event => {
+                if (event.which === 13) {
+                  event.preventDefault()
+                  if (currentToken !== '') {
+                    const tokens = searchTokens.add(currentToken)
+                    setSearchTokens(tokens)
+                    setCurrentToken('')
+                  } else {
+                    const q = [...searchTokens]
+                      .map(token => {
+                        return `"${token.replace(/"/g, '')}"`
+                      })
+                      .join('+')
+
+                    setQuery(q)
+                  }
+                }
+              }}
+            />
+            {searchTokens.size > 0 && (
+              <Flex>
+                {[...searchTokens].map((token, i) => {
+                  return (
+                    <Token key={i}>
+                      {token}
+                      <IconButton
+                        onClick={event => {
+                          searchTokens.delete(token)
+                          setSearchTokens(searchTokens)
+                        }}
+                      >
+                        🔨
+                      </IconButton>
+                    </Token>
+                  )
+                })}
+              </Flex>
+            )}
+          </Fragment>
+        )}
 
         <Flex>
           <FlexGrow>
@@ -112,12 +190,24 @@ const Index = ({
               <input
                 type="checkbox"
                 name="hasVisualRepresentation"
-                value={true}
+                value={hasVisualRepresentation}
                 onChange={event => {
                   setHasVisualRepresentation(event.currentTarget.checked)
                 }}
               />
               Gotz viz
+            </label>
+            <label style={{ marginLeft: '20px' }}>
+              <input
+                type="checkbox"
+                name="useQueryBuilder"
+                value={isQueryBuilder}
+                checked={isQueryBuilder}
+                onChange={event => {
+                  setIsQueryBuilder(event.currentTarget.checked)
+                }}
+              />
+              Yooz tokenz search
             </label>
           </FlexGrow>
           <div>{resultsList && `${resultsList.totalResults} results`}</div>
@@ -139,7 +229,6 @@ const Index = ({
                         hasVisualRepresentation
                       })
                     }}
-                    onClick={event => console.info(event)}
                   >
                     <a>
                       <UiText>{result.workType.label} /</UiText> {result.title}
@@ -167,7 +256,7 @@ Index.getInitialProps = async ctx => {
   const url =
     'https://api.wellcomecollection.org/catalogue/v2/works?pageSize=100&' +
     [
-      query ? `query=${query}` : null,
+      query ? `query=${encodeURIComponent(query)}` : null,
       itemsLocationsLocationType
         ? `items.locations.locationType=${itemsLocationsLocationType.join(',')}`
         : null
