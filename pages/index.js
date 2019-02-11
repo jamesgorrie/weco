@@ -58,6 +58,17 @@ const IconButton = styled.button`
   cursor: pointer;
 `
 
+const MegaSelect = styled.select`
+  font-size: 24px;
+  border-radius: 0;
+  border: 1px solid black;
+  background: limegreen;
+  -webkit-appearance: none;
+  padding-left: 15px;
+  padding-right: 15px;
+  color: white;
+`
+
 // Empty is anything that doesn't pass JS's `is`
 function removeEmptyValuesFromObject(obj) {
   return Object.keys(obj).reduce((newObj, key) => {
@@ -78,16 +89,13 @@ const Index = ({
   initialQuery = '',
   initialHasVisualRepresentation
 }) => {
-  const [isQueryBuilder, setIsQueryBuilder] = useState(true)
   const [searchTokens, setSearchTokens] = useState(
     new Set(
-      initialQuery
-        .split('+')
-        .filter(token => token !== '')
-        .map(token => token.replace(/"/g, ''))
+      (initialQuery.match(/([|+-]".*?")/g) || []).filter(token => token !== '')
     )
   )
   const [currentToken, setCurrentToken] = useState('')
+  const [currentTokenCombiner, setCurrentTokenCombiner] = useState('+')
   const [query, setQuery] = useState(initialQuery)
   const [hasVisualRepresentation, setHasVisualRepresentation] = useState(
     initialHasVisualRepresentation
@@ -129,17 +137,17 @@ const Index = ({
           Router.push(link, link)
         }}
       >
-        {!isQueryBuilder && (
-          <SearchTextInput
-            type="text"
-            placeholder="🔎"
-            name="query"
-            value={query}
-            onChange={event => setQuery(event.currentTarget.value)}
-          />
-        )}
-        {isQueryBuilder && (
-          <Fragment>
+        <Fragment>
+          <Flex>
+            <MegaSelect
+              onChange={event => {
+                setCurrentTokenCombiner(event.currentTarget.value)
+              }}
+            >
+              <option value="+">+ (andz)</option>
+              <option value="|">| (orz)</option>
+              <option value="-">- (notz)</option>
+            </MegaSelect>
             <SearchTextInput
               type="text"
               placeholder="🔎"
@@ -153,48 +161,51 @@ const Index = ({
                 if (event.which === 13) {
                   event.preventDefault()
                   if (currentToken !== '') {
-                    const tokens = searchTokens.add(currentToken)
+                    const tokens = searchTokens.add(
+                      `${currentTokenCombiner}"${currentToken}"`
+                    )
                     setSearchTokens(tokens)
                     setCurrentToken('')
-                    const q = [...searchTokens]
-                      .map(token => {
-                        return `"${token.replace(/"/g, '')}"`
-                      })
-                      .join('+')
+                    const q = [...searchTokens].join('')
 
                     setQuery(q)
                   }
                 }
               }}
             />
-            {searchTokens.size > 0 && (
-              <Flex>
-                {[...searchTokens].map((token, i) => {
-                  return (
-                    <Token key={i}>
-                      {token}
-                      <IconButton
-                        onClick={event => {
-                          searchTokens.delete(token)
-                          setSearchTokens(searchTokens)
-                          const q = [...searchTokens]
-                            .map(token => {
-                              return `"${token.replace(/"/g, '')}"`
-                            })
-                            .join('+')
-
-                          setQuery(q)
-                        }}
-                      >
-                        🔨
-                      </IconButton>
-                    </Token>
-                  )
-                })}
-              </Flex>
-            )}
-          </Fragment>
-        )}
+          </Flex>
+          {searchTokens.size > 0 && (
+            <Flex>
+              {[...searchTokens].map((token, i) => {
+                return (
+                  <Token key={i}>
+                    <span
+                      style={{
+                        background: 'limegreen',
+                        display: 'inline-block',
+                        padding: '0 5px',
+                        margin: '0 5px 0 0'
+                      }}
+                    >
+                      {token.split(/(\+|\||\-)(.*)/)[1]}
+                    </span>
+                    <span>{token.split(/(\+|\||\-)(.*)/)[2]}</span>
+                    <IconButton
+                      onClick={event => {
+                        searchTokens.delete(token)
+                        setSearchTokens(searchTokens)
+                        const q = [...searchTokens].join('')
+                        setQuery(q)
+                      }}
+                    >
+                      🔨
+                    </IconButton>
+                  </Token>
+                )
+              })}
+            </Flex>
+          )}
+        </Fragment>
 
         <Flex>
           <FlexGrow>
@@ -208,18 +219,6 @@ const Index = ({
                 }}
               />
               Gotz viz
-            </label>
-            <label style={{ marginLeft: '20px' }}>
-              <input
-                type="checkbox"
-                name="useQueryBuilder"
-                value={isQueryBuilder}
-                checked={isQueryBuilder}
-                onChange={event => {
-                  setIsQueryBuilder(event.currentTarget.checked)
-                }}
-              />
-              Yooz tokenz search
             </label>
           </FlexGrow>
           <div>{resultsList && `${resultsList.totalResults} results`}</div>
