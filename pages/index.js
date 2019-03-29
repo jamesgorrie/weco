@@ -87,7 +87,8 @@ const Index = ({
   id,
   resultsList,
   initialQuery = '',
-  initialHasVisualRepresentation
+  initialHasVisualRepresentation,
+  initial_queryType
 }) => {
   const [searchTokens, setSearchTokens] = useState(
     new Set(
@@ -103,6 +104,8 @@ const Index = ({
   const debouncedQuery = useDebounce(query, 250)
 
   const firstRender = useRef(true)
+  const [_queryType, set_queryType] = useState(initial_queryType)
+
   useEffect(() => {
     if (firstRender.current) {
       firstRender.current = false
@@ -113,12 +116,13 @@ const Index = ({
       pathname: '/',
       query: removeEmptyValuesFromObject({
         query,
-        hasVisualRepresentation
+        hasVisualRepresentation,
+        _queryType
       })
     }
 
     Router.push(link, link)
-  }, [debouncedQuery, hasVisualRepresentation])
+  }, [debouncedQuery, hasVisualRepresentation, _queryType])
 
   return (
     <div>
@@ -220,6 +224,20 @@ const Index = ({
               />
               Gotz viz
             </label>
+            {' | '}
+            <label>
+              🥁 all go rhythm 🎺
+              <select
+                value={_queryType}
+                onChange={event => set_queryType(event.currentTarget.value)}
+              >
+                <option value={''}>nuffink</option>
+                <option value="justboost">justboost</option>
+                <option value="broaderboost">broaderboost</option>
+                <option value="slop">slop</option>
+                <option value="minimummatch">minimummatch</option>
+              </select>
+            </label>
           </FlexGrow>
           <div>{resultsList && `${resultsList.totalResults} results`}</div>
         </Flex>
@@ -259,7 +277,7 @@ const Index = ({
 }
 
 Index.getInitialProps = async ctx => {
-  const { query, hasVisualRepresentation, id } = ctx.query
+  const { query, hasVisualRepresentation, id, _queryType } = ctx.query
   const itemsLocationsLocationType = hasVisualRepresentation
     ? ['iiif-image', 'iiif-presentation']
     : null
@@ -268,6 +286,7 @@ Index.getInitialProps = async ctx => {
     'https://api.wellcomecollection.org/catalogue/v2/works?pageSize=100&' +
     [
       query ? `query=${encodeURIComponent(query)}` : null,
+      _queryType ? `_queryType=${encodeURIComponent(_queryType)}` : null,
       itemsLocationsLocationType
         ? `items.locations.locationType=${itemsLocationsLocationType.join(',')}`
         : null
@@ -281,6 +300,7 @@ Index.getInitialProps = async ctx => {
     id,
     resultsList,
     initialQuery: query,
+    initial_queryType: _queryType,
     initialHasVisualRepresentation: Boolean(hasVisualRepresentation)
   }
 }
