@@ -127,6 +127,13 @@ const Index = ({
   return (
     <div>
       <GlobalStyle />
+
+      <div style={{ display: 'flex' }}>
+        <h1 style={{ fontSize: '16px' }}>
+          Weco workS <sup>An online portal of e-works</sup>
+        </h1>
+      </div>
+
       <form
         onSubmit={event => {
           event.preventDefault()
