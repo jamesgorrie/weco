@@ -88,7 +88,9 @@ const Index = ({
   resultsList,
   initialQuery = '',
   initialHasVisualRepresentation,
-  initial_queryType
+  initial_queryType,
+  initial_dateFrom,
+  initial_dateTo
 }) => {
   const [searchTokens, setSearchTokens] = useState(
     new Set(
@@ -102,6 +104,8 @@ const Index = ({
     initialHasVisualRepresentation
   )
   const debouncedQuery = useDebounce(query, 250)
+  const [_dateFrom, set_dateFrom] = useState(initial_dateFrom)
+  const [_dateTo, set_dateTo] = useState(initial_dateTo)
 
   const firstRender = useRef(true)
   const [_queryType, set_queryType] = useState(initial_queryType)
@@ -117,12 +121,14 @@ const Index = ({
       query: removeEmptyValuesFromObject({
         query,
         hasVisualRepresentation,
-        _queryType
+        _queryType,
+        _dateFrom,
+        _dateTo
       })
     }
 
     Router.push(link, link)
-  }, [debouncedQuery, hasVisualRepresentation, _queryType])
+  }, [debouncedQuery, hasVisualRepresentation, _queryType, _dateFrom, _dateTo])
 
   return (
     <div>
@@ -248,6 +254,21 @@ const Index = ({
           </FlexGrow>
           <div>{resultsList && `${resultsList.totalResults} results`}</div>
         </Flex>
+
+        <input
+          type="date"
+          name="_dateFrom"
+          value={_dateFrom}
+          onChange={event => {
+            set_dateFrom(event.currentTarget.value)
+          }}
+        />
+        <input
+          type="date"
+          name="_dateTo"
+          value={_dateTo}
+          onChange={event => set_dateTo(event.currentTarget.value)}
+        />
       </form>
 
       {!id && resultsList && resultsList.results.length > 0 && (
@@ -284,19 +305,28 @@ const Index = ({
 }
 
 Index.getInitialProps = async ctx => {
-  const { query, hasVisualRepresentation, id, _queryType } = ctx.query
+  const {
+    query,
+    hasVisualRepresentation,
+    id,
+    _queryType,
+    _dateFrom,
+    _dateTo
+  } = ctx.query
   const itemsLocationsLocationType = hasVisualRepresentation
     ? ['iiif-image', 'iiif-presentation']
     : null
 
   const url =
-    'https://api.wellcomecollection.org/catalogue/v2/works?pageSize=100&' +
+    'https://api-stage.wellcomecollection.org/catalogue/v2/works?pageSize=100&' +
     [
       query ? `query=${encodeURIComponent(query)}` : null,
       _queryType ? `_queryType=${encodeURIComponent(_queryType)}` : null,
       itemsLocationsLocationType
         ? `items.locations.locationType=${itemsLocationsLocationType.join(',')}`
-        : null
+        : null,
+      _dateFrom ? `_dateFrom=${_dateFrom}` : null,
+      _dateTo ? `_dateTo=${_dateTo}` : null
     ]
       .filter(Boolean)
       .join('&')
@@ -308,7 +338,9 @@ Index.getInitialProps = async ctx => {
     resultsList,
     initialQuery: query,
     initial_queryType: _queryType,
-    initialHasVisualRepresentation: Boolean(hasVisualRepresentation)
+    initialHasVisualRepresentation: Boolean(hasVisualRepresentation),
+    initial_dateFrom: _dateFrom,
+    initial_dateTo: _dateTo
   }
 }
 
