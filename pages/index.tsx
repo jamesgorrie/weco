@@ -60,7 +60,7 @@ const Index: NextPage = ({ results, aggregations, params }: Props) => {
           )
 
           Router.push({
-            pathname: '/new',
+            pathname: '/',
             query: newParams
           })
           event.preventDefault()
@@ -90,7 +90,7 @@ const Index: NextPage = ({ results, aggregations, params }: Props) => {
                 <Token key={i} selected={selected}>
                   <Link
                     href={{
-                      pathname: '/new',
+                      pathname: '/',
                       query: {
                         query: params.query,
                         workType: Array.from(workTypeSet.values())
@@ -110,6 +110,18 @@ const Index: NextPage = ({ results, aggregations, params }: Props) => {
             })}
           </Flex>
         )}
+
+      <div style={{ textAlign: 'center' }}>
+        <div
+          style={{
+            background: 'hotpink',
+            display: 'inline-block',
+            padding: '5px'
+          }}
+        >
+          #️⃣ {results.totalResults}
+        </div>
+      </div>
 
       {results && results.results.length > 0 && (
         <div>
@@ -158,7 +170,7 @@ Index.getInitialProps = async ({ query }: NextPageContext): Promise<Props> => {
     .join('&')
 
   const resultsUrl = `https://api.wellcomecollection.org/catalogue/v2/works?pageSize=100&${qs}`
-  const aggregationsUrl = `https://api.wellcomecollection.org/catalogue/v2/works?_aggregations=workType&query=${params.query}`
+  const aggregationsUrl = `https://api.wellcomecollection.org/catalogue/v2/works?aggregations=workType&query=${params.query}`
 
   const results = await fetch(resultsUrl).then(resp => resp.json())
   const aggregations = await fetch(aggregationsUrl).then(resp => resp.json())
