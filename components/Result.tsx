@@ -1,7 +1,7 @@
 const Result = ({ result }) => {
   return (
     <div>
-      <h1>{result.title}</h1>
+      <h1>WRONG {result.title}</h1>
     </div>
   )
 }
